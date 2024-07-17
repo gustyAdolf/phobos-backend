@@ -1,0 +1,30 @@
+server:
+  port: 8081
+  error:
+    include-message: always
+  servlet:
+    context-path: /phobos-api
+
+spring:
+  application:
+    name: phobos
+
+  jpa:
+    show-sql: false
+    open-in-view: false
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/phobosdb
+    username: phobos
+    password: Ph0bo$
+    hikari:
+      connection-timeout: 30000
+      max-lifetime: 18000000
+  web:
+    resources:
+      static-locations:
+        - file:/phobos/
+user:
+  image:
+    path: /phobos/images/users/
+    preffix: /images/users/
