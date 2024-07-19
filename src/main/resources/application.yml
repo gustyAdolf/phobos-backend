@@ -14,7 +14,11 @@ spring:
     open-in-view: false
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/phobosdb
+    # Local host
+#    url: jdbc:postgresql://localhost:5432/phobosdb
+
+    # Mac db
+    url: jdbc:postgresql://192.168.4.49:5432/phobosdb
     username: phobos
     password: Ph0bo$
     hikari:
