@@ -5,6 +5,11 @@ server:
   servlet:
     context-path: /phobos-api
 
+jwt:
+  secret: ph0bo$
+  expirationMs: 3600000 # 1h in millisenconds
+  refreshExpirationMs: 604800000 # 7 dias
+
 spring:
   application:
     name: phobos
