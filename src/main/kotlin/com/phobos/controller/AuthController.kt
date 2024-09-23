@@ -3,8 +3,7 @@ package com.phobos.controller
 import com.phobos.application.config.security.JwtUtil
 import com.phobos.application.dto.AuthenticationRequest
 import com.phobos.application.dto.AuthenticationResponse
-import com.phobos.application.dto.RefreshToken
-import org.springframework.http.HttpStatus
+import com.phobos.application.service.UserService
 import org.springframework.http.ResponseEntity
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
@@ -20,7 +19,8 @@ import org.springframework.web.bind.annotation.RestController
 class AuthController(
     private val authenticationManager: AuthenticationManager,
     private val jwtUtil: JwtUtil,
-    private val userDetailsService: UserDetailsService
+    private val userDetailsService: UserDetailsService,
+    private val userService: UserService
 ) {
     @PostMapping("/login")
     fun createAuthenticationToken(@RequestBody authenticationRequest: AuthenticationRequest):
@@ -29,23 +29,16 @@ class AuthController(
             UsernamePasswordAuthenticationToken(authenticationRequest.email, authenticationRequest.password)
         )
         val userDetails: UserDetails = userDetailsService.loadUserByUsername(authenticationRequest.email)
-        val jwt: String = jwtUtil.generateToken(userDetails)
-        val refresh = jwtUtil.generateRefreshToken(userDetails)
-
-        return ResponseEntity.ok(AuthenticationResponse(jwt, refresh))
-    }
-
-    @PostMapping("/refresh")
-    fun refreshAuthenticationToken(@RequestBody refreshToken: RefreshToken): ResponseEntity<AuthenticationResponse> {
-        val userDetails =
-            jwtUtil.getUserDetailsFromRefreshToken(refreshToken.refreshToken)
-
-        if (jwtUtil.validateRefreshToken(refreshToken.refreshToken, userDetails)) {
-            val newAccessToken = jwtUtil.generateToken(userDetails)
-            return ResponseEntity.ok(AuthenticationResponse(newAccessToken, refreshToken.refreshToken))
-        }
-
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()
+        val jwt: String = jwtUtil.generateToken(userDetails, true)
+        val refresh = jwtUtil.generateRefreshToken(userDetails, true)
+        val userResponse = userService.getUserByEmail(authenticationRequest.email)
+        return ResponseEntity.ok(
+            AuthenticationResponse(
+                token = jwt,
+                refreshToken = refresh,
+                user = userResponse
+            )
+        )
     }
 
 }

@@ -7,8 +7,7 @@ server:
 
 jwt:
   secret: ph0bo$
-  expirationMs: 3600000 # 1h in millisenconds
-  refreshExpirationMs: 604800000 # 7 dias
+  expirationMs: 604800000 # 7 days in millisenconds
 
 spring:
   application:
@@ -20,7 +19,7 @@ spring:
 
   datasource:
     # Local host
-#    url: jdbc:postgresql://localhost:5432/phobosdb
+    #    url: jdbc:postgresql://localhost:5432/phobosdb
 
     # Mac db
     url: jdbc:postgresql://192.168.4.49:5432/phobosdb

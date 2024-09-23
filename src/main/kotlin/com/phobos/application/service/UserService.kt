@@ -26,6 +26,17 @@ class UserService(
     @Value("\${user.image.path}") private val imagePath: String,
     @Value("\${user.image.preffix}") private val preffixImageName: String
 ) {
+
+    @Transactional(readOnly = true)
+    fun getUserByEmail(email: String): UserResponse {
+        val user = userRepository.findByEmail(email)
+        user?.let {
+            return UserMapper.entityToResponse(user)
+        }
+        throw Exception("Usuario no encontrado") // TODO exception
+    }
+
+
     @Transactional(readOnly = true)
     fun getUsers(name: String?, mentalDisorder: String?, pageable: Pageable): Page<UserResponse> {
         val userEntities = if (!name.isNullOrEmpty()) {

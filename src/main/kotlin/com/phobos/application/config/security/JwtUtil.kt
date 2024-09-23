@@ -16,8 +16,6 @@ class JwtUtil(
     @Value("\${jwt.expirationMs}")
     private val jwtExpirationMs: Long,
 
-    @Value("\${jwt.refreshExpirationMs}")
-    private val jwtRefreshExpirationMs: Long,
 
     private val phobosUserDetailsService: PhobosUserDetailsService
 ) {
@@ -47,24 +45,29 @@ class JwtUtil(
         return extractExpiration(token).before(Date())
     }
 
-    fun generateToken(userDetails: UserDetails): String {
+    fun generateToken(userDetails: UserDetails, neverExpire: Boolean = false): String {
         val claims: Map<String, Any> = HashMap()
-        return createToken(claims, userDetails.username, jwtExpirationMs)
+        return createToken(claims, userDetails.username, neverExpire)
     }
 
-    fun generateRefreshToken(userDetails: UserDetails): String {
+    fun generateRefreshToken(userDetails: UserDetails, neverExpire: Boolean = false): String {
         val claims: Map<String, Any> = HashMap()
-        return createToken(claims, userDetails.username, jwtRefreshExpirationMs)
+        return createToken(claims, userDetails.username, neverExpire)
     }
 
-    private fun createToken(claims: Map<String, Any>, subject: String, expirationMs: Long): String {
-        return Jwts.builder()
-            .setClaims(claims)
-            .setSubject(subject)
-            .setIssuedAt(Date())
-            .setExpiration(Date(System.currentTimeMillis() + expirationMs))
-            .signWith(SignatureAlgorithm.HS256, secret)
-            .compact()
+    private fun createToken(claims: Map<String, Any>, subject: String, neverExpire: Boolean = false): String {
+       val builder = Jwts.builder()
+           .setClaims(claims)
+           .setSubject(subject)
+           .setIssuedAt(Date())
+           .signWith(SignatureAlgorithm.HS256, secret)
+
+
+        if (!neverExpire) {
+            builder.setExpiration(Date(System.currentTimeMillis() + jwtExpirationMs))
+        }
+
+        return builder.compact()
     }
 
     fun validateToken(token: String?, userDetails: UserDetails): Boolean {
@@ -72,7 +75,7 @@ class JwtUtil(
             false
         } else {
             val username = extractUsername(token)
-            (username == userDetails.username && !isTokenExpired(token))
+            (username == userDetails.username)
         }
     }
 

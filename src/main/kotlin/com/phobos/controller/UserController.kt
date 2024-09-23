@@ -1,14 +1,16 @@
 package com.phobos.controller
 
+import com.phobos.application.config.security.JwtUtil
 import com.phobos.application.dto.MentalDisorderResponse
 import com.phobos.application.dto.user.UserRequest
 import com.phobos.application.dto.user.UserResponse
 import com.phobos.application.service.UserService
-import org.springframework.beans.factory.annotation.Autowired
+import jakarta.servlet.http.HttpServletRequest
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -17,7 +19,10 @@ import org.springframework.web.multipart.MultipartFile
 
 @RestController
 @RequestMapping("/users")
-class UserController(@Autowired val userService: UserService) {
+class UserController(
+    private val userService: UserService,
+    private val jwtUtil: JwtUtil
+) {
 
     @GetMapping
     fun getAllUsers(
@@ -37,6 +42,22 @@ class UserController(@Autowired val userService: UserService) {
         val pageable: Pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortField))
         val userPage: Page<UserResponse> = userService.getUsers(name, mentalDisorder, pageable)
         return ResponseEntity.ok(userPage)
+    }
+
+    @GetMapping("/my-user")
+    fun getMyUser(request: HttpServletRequest): ResponseEntity<UserResponse> {
+        try {
+            val authorizationHeader = request.getHeader("Authorization")
+            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()
+            }
+
+            val token = authorizationHeader.substring(7)
+            val email = jwtUtil.extractUsername(token)
+            return ResponseEntity.ok(userService.getUserByEmail(email))
+        } catch (e: Exception) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+        }
     }
 
     @GetMapping("/{userId}/mental-disorder")
